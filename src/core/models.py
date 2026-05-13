@@ -23,7 +23,6 @@ class CloudflaredConfig:
     install_luci: bool = True
     configure_token_service: bool = True
     tunnel_token: str = ""
-    service_name: str = "cloudflared"
     token_path: str = "/etc/cloudflared/token"
     init_script_path: str = "/etc/init.d/cloudflared"
 
@@ -35,9 +34,6 @@ class V2RayAConfig:
     install_luci: bool = True
     core: str = "xray"
     enable_service: bool = False
-
-    # VLESS/Xray ссылка хранится в JSON и загружается на роутер.
-    # На этом этапе программа НЕ включает VPN и НЕ запускает прозрачный прокси.
     vless_uri: str = ""
     prepare_vless_config: bool = True
     prepared_config_path: str = "/etc/v2raya/cwrouterremote_vless_uri.txt"
@@ -47,13 +43,11 @@ class V2RayAConfig:
 class DeployOptions:
     dry_run: bool = False
     update_package_lists: bool = True
-    detect_only: bool = False
     check_status_after: bool = True
 
 
 @dataclass
 class RouterConfig:
-    name: str = ""
     ssh: SSHConfig = field(default_factory=SSHConfig)
     cloudflared: CloudflaredConfig = field(default_factory=CloudflaredConfig)
     v2raya: V2RayAConfig = field(default_factory=V2RayAConfig)
@@ -66,6 +60,7 @@ class RouterConfig:
         v2raya_raw = raw.get("v2raya", {})
         deploy_raw = raw.get("deploy", {})
 
+        # Совместимость со старым плоским JSON.
         if "host" in raw:
             ssh_raw.setdefault("host", raw.get("host", "192.168.1.1"))
         if "port" in raw:
@@ -80,7 +75,6 @@ class RouterConfig:
             cloudflared_raw.setdefault("tunnel_token", raw.get("tunnel_token", ""))
 
         return RouterConfig(
-            name=str(raw.get("name", "")),
             ssh=SSHConfig(
                 host=str(ssh_raw.get("host", "192.168.1.1")),
                 port=int(ssh_raw.get("port", 22)),
@@ -96,7 +90,6 @@ class RouterConfig:
                 install_luci=bool(cloudflared_raw.get("install_luci", True)),
                 configure_token_service=bool(cloudflared_raw.get("configure_token_service", True)),
                 tunnel_token=str(cloudflared_raw.get("tunnel_token", "")),
-                service_name=str(cloudflared_raw.get("service_name", "cloudflared")),
                 token_path=str(cloudflared_raw.get("token_path", "/etc/cloudflared/token")),
                 init_script_path=str(cloudflared_raw.get("init_script_path", "/etc/init.d/cloudflared")),
             ),
@@ -108,12 +101,13 @@ class RouterConfig:
                 enable_service=bool(v2raya_raw.get("enable_service", False)),
                 vless_uri=str(v2raya_raw.get("vless_uri", "")),
                 prepare_vless_config=bool(v2raya_raw.get("prepare_vless_config", True)),
-                prepared_config_path=str(v2raya_raw.get("prepared_config_path", "/etc/v2raya/cwrouterremote_vless_uri.txt")),
+                prepared_config_path=str(
+                    v2raya_raw.get("prepared_config_path", "/etc/v2raya/cwrouterremote_vless_uri.txt")
+                ),
             ),
             deploy=DeployOptions(
                 dry_run=bool(deploy_raw.get("dry_run", False)),
                 update_package_lists=bool(deploy_raw.get("update_package_lists", True)),
-                detect_only=bool(deploy_raw.get("detect_only", False)),
                 check_status_after=bool(deploy_raw.get("check_status_after", True)),
             ),
         )
@@ -122,26 +116,24 @@ class RouterConfig:
         errors: list[str] = []
 
         if not self.ssh.host.strip():
-            errors.append("SSH host is empty.")
+            errors.append("IP / Host пустой.")
         if not (1 <= self.ssh.port <= 65535):
-            errors.append("SSH port must be between 1 and 65535.")
+            errors.append("Порт должен быть от 1 до 65535.")
         if not self.ssh.username.strip():
-            errors.append("SSH username is empty.")
+            errors.append("Логин пустой.")
 
         if self.ssh.ssh_key_path:
             key_path = Path(self.ssh.ssh_key_path).expanduser()
             if not key_path.exists():
-                errors.append(f"SSH key file does not exist: {key_path}")
+                errors.append(f"SSH ключ не найден: {key_path}")
 
-        if self.cloudflared.enabled and self.cloudflared.configure_token_service:
-            if not self.cloudflared.tunnel_token.strip():
-                errors.append("Cloudflared tunnel token is empty.")
+        if self.cloudflared.configure_token_service and not self.cloudflared.tunnel_token.strip():
+            errors.append("Cloudflare tunnel token пустой.")
 
         if self.v2raya.core not in {"xray", "v2ray"}:
-            errors.append("v2rayA core must be 'xray' or 'v2ray'.")
+            errors.append("v2rayA core должен быть 'xray' или 'v2ray'.")
 
-        if self.v2raya.enabled and self.v2raya.prepare_vless_config:
-            if not self.v2raya.vless_uri.strip():
-                errors.append("v2rayA VLESS URI is empty.")
+        if self.v2raya.prepare_vless_config and not self.v2raya.vless_uri.strip():
+            errors.append("VLESS/Xray ссылка пустая.")
 
         return errors

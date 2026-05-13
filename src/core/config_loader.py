@@ -17,9 +17,9 @@ def load_router_config(path: str | Path) -> RouterConfig:
     return RouterConfig.from_dict(load_json(path))
 
 
-def save_router_config(path: str | Path, config: RouterConfig) -> None:
-    data = {
-        "name": config.name,
+def router_config_to_dict(config: RouterConfig) -> dict[str, Any]:
+    # В JSON специально нет имени файла / hostname-профиля.
+    return {
         "ssh": {
             "host": config.ssh.host,
             "port": config.ssh.port,
@@ -35,7 +35,6 @@ def save_router_config(path: str | Path, config: RouterConfig) -> None:
             "install_luci": config.cloudflared.install_luci,
             "configure_token_service": config.cloudflared.configure_token_service,
             "tunnel_token": config.cloudflared.tunnel_token,
-            "service_name": config.cloudflared.service_name,
             "token_path": config.cloudflared.token_path,
             "init_script_path": config.cloudflared.init_script_path,
         },
@@ -52,14 +51,15 @@ def save_router_config(path: str | Path, config: RouterConfig) -> None:
         "deploy": {
             "dry_run": config.deploy.dry_run,
             "update_package_lists": config.deploy.update_package_lists,
-            "detect_only": config.deploy.detect_only,
             "check_status_after": config.deploy.check_status_after,
         },
     }
 
+
+def save_router_config(path: str | Path, config: RouterConfig) -> None:
     config_path = Path(path).expanduser().resolve()
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
     with config_path.open("w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=2)
+        json.dump(router_config_to_dict(config), file, ensure_ascii=False, indent=2)
         file.write("\n")

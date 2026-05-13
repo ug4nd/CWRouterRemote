@@ -11,18 +11,12 @@ class CloudflaredInstaller:
         self.pm = package_manager
 
     def install(self, pm_name: str, config: CloudflaredConfig, update_lists: bool = True) -> None:
-        if not config.enabled:
-            self.ssh.logger("Cloudflared step skipped.")
-            return
-
         if config.install_package:
-            self.ssh.logger("Installing cloudflared package ...")
             if update_lists:
                 self.pm.update(pm_name)
             self.pm.install(pm_name, ["cloudflared"], required=True)
 
         if config.install_luci:
-            self.ssh.logger("Installing LuCI app for cloudflared if available ...")
             self.pm.install(pm_name, ["luci-app-cloudflared"], required=False)
 
         if config.configure_token_service:
@@ -31,12 +25,12 @@ class CloudflaredInstaller:
     def configure_token_service(self, config: CloudflaredConfig) -> None:
         token = config.tunnel_token.strip()
         if not token:
-            raise ValueError("Cloudflared tunnel token is empty.")
+            raise ValueError("Cloudflare tunnel token пустой.")
 
-        self.ssh.logger("Проверяю, установлен ли cloudflared ...")
+        self.ssh.logger("Проверяю cloudflared ...")
         self.ssh.run_checked("command -v cloudflared >/dev/null 2>&1", timeout=30)
 
-        self.ssh.logger("Настраиваю cloudflared tunnel token service ...")
+        self.ssh.logger("Настраиваю Cloudflare tunnel ...")
 
         self.ssh.run_checked("mkdir -p /etc/cloudflared", timeout=30)
         self.ssh.write_remote_file(config.token_path, token + "\n", mode="0600", timeout=30)
@@ -57,20 +51,19 @@ start_service() {{
     procd_set_param stderr 1
     procd_close_instance
 }}
-
-stop_service() {{
-    return 0
-}}
 """
         self.ssh.write_remote_file(config.init_script_path, init_script, mode="0755", timeout=30)
 
         self.ssh.run_checked(f"{config.init_script_path} enable", timeout=30)
         self.ssh.run_checked(f"{config.init_script_path} restart", timeout=90)
+        self.ssh.logger("Cloudflare tunnel настроен и запущен.")
 
     def status(self, config: CloudflaredConfig) -> None:
         if not config.enabled:
             return
 
-        self.ssh.logger("Checking cloudflared status ...")
-        self.ssh.run_command("pgrep -a cloudflared || true", timeout=30)
-        self.ssh.run_command(f"{config.init_script_path} status || true", timeout=30)
+        result = self.ssh.run_command("pgrep -a cloudflared || true", timeout=30)
+        if result.stdout.strip():
+            self.ssh.logger("cloudflared: работает")
+        else:
+            self.ssh.logger("cloudflared: процесс не найден")

@@ -24,11 +24,8 @@ class CommandResult:
 class SSHCommandError(RuntimeError):
     def __init__(self, result: CommandResult):
         self.result = result
-        message = (
-            f"Command failed with exit code {result.exit_code}: {result.command}\n"
-            f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
-        )
-        super().__init__(message)
+        details = result.stderr.strip() or result.stdout.strip() or "нет вывода"
+        super().__init__(f"Команда завершилась ошибкой {result.exit_code}: {result.command}\n{details}")
 
 
 class SSHClient:
@@ -44,7 +41,7 @@ class SSHClient:
         self.client: paramiko.SSHClient | None = None
 
     def connect(self) -> None:
-        self.logger(f"Connecting to {self.config.username}@{self.config.host}:{self.config.port} ...")
+        self.logger(f"SSH: подключение к {self.config.username}@{self.config.host}:{self.config.port}")
 
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -70,14 +67,13 @@ class SSHClient:
 
         client.connect(**connect_kwargs)
         self.client = client
-
-        self.logger("SSH connected.")
+        self.logger("SSH: подключено")
 
     def close(self) -> None:
         if self.client is not None:
             self.client.close()
             self.client = None
-            self.logger("SSH connection closed.")
+            self.logger("SSH: отключено")
 
     def __enter__(self) -> "SSHClient":
         self.connect()
@@ -90,7 +86,7 @@ class SSHClient:
         self,
         command: str,
         timeout: int | None = None,
-        log_command: bool = True,
+        show_output: bool = False,
     ) -> CommandResult:
         if self.dry_run:
             self.logger(f"[dry-run] {command}")
@@ -98,9 +94,6 @@ class SSHClient:
 
         if self.client is None:
             raise RuntimeError("SSH client is not connected.")
-
-        if log_command:
-            self.logger(f"$ {command}")
 
         stdin, stdout, stderr = self.client.exec_command(
             command,
@@ -112,27 +105,27 @@ class SSHClient:
         out_text = stdout.read().decode("utf-8", errors="replace")
         err_text = stderr.read().decode("utf-8", errors="replace")
 
-        if out_text.strip():
-            self.logger(out_text.rstrip())
-        if err_text.strip():
-            self.logger("[stderr] " + err_text.rstrip())
+        if show_output:
+            if out_text.strip():
+                self.logger(out_text.rstrip())
+            if err_text.strip():
+                self.logger(err_text.rstrip())
 
-        self.logger(f"Exit code: {exit_code}")
+        if exit_code != 0:
+            short_err = (err_text.strip() or out_text.strip() or "нет вывода").splitlines()
+            self.logger(f"Ошибка команды: {command}")
+            if short_err:
+                self.logger(short_err[-1])
 
-        return CommandResult(
-            command=command,
-            exit_code=exit_code,
-            stdout=out_text,
-            stderr=err_text,
-        )
+        return CommandResult(command=command, exit_code=exit_code, stdout=out_text, stderr=err_text)
 
     def run_checked(
         self,
         command: str,
         timeout: int | None = None,
-        log_command: bool = True,
+        show_output: bool = False,
     ) -> CommandResult:
-        result = self.run_command(command, timeout=timeout, log_command=log_command)
+        result = self.run_command(command, timeout=timeout, show_output=show_output)
         if not result.ok:
             raise SSHCommandError(result)
         return result
@@ -144,8 +137,6 @@ class SSHClient:
         mode: str = "0644",
         timeout: int | None = None,
     ) -> CommandResult:
-        # POSIX-safe single-quote escaping for heredoc body is not enough when the
-        # delimiter is quoted. We use cat <<'EOF' so the body is not expanded.
         command = f"""cat > {remote_path} <<'CWROUTERREMOTE_EOF'
 {content}
 CWROUTERREMOTE_EOF

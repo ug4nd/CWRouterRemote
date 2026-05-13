@@ -61,29 +61,34 @@ printf '%s\n' "$OPENWRT_RELEASE"
         )
 
     def update(self, pm: str) -> None:
+        self.ssh.logger("Обновляю список пакетов ...")
         if pm == "apk":
             self.ssh.run_checked("apk update", timeout=180)
         elif pm == "opkg":
             self.ssh.run_checked("opkg update", timeout=180)
         else:
-            raise RuntimeError(f"Unsupported package manager: {pm}")
+            raise RuntimeError(f"Неизвестный пакетный менеджер: {pm}")
 
     def install(self, pm: str, packages: list[str], required: bool = True) -> None:
         if not packages:
             return
 
         package_list = " ".join(packages)
+        self.ssh.logger(f"Устанавливаю: {package_list}")
 
         if pm == "apk":
             command = f"apk add {package_list}"
         elif pm == "opkg":
             command = f"opkg install {package_list}"
         else:
-            raise RuntimeError(f"Unsupported package manager: {pm}")
+            raise RuntimeError(f"Неизвестный пакетный менеджер: {pm}")
 
         if required:
             self.ssh.run_checked(command, timeout=420)
+            self.ssh.logger(f"Готово: {package_list}")
         else:
             result = self.ssh.run_command(command, timeout=420)
-            if not result.ok:
-                self.ssh.logger(f"Optional package install failed: {package_list}")
+            if result.ok:
+                self.ssh.logger(f"Готово: {package_list}")
+            else:
+                self.ssh.logger(f"Опциональный пакет не установлен: {package_list}")

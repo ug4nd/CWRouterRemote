@@ -1,5 +1,4 @@
 {
-  "name": "",
   "ssh": {
     "host": "192.168.1.1",
     "port": 22,
@@ -15,7 +14,6 @@
     "install_luci": true,
     "configure_token_service": true,
     "tunnel_token": "PASTE_CLOUDFLARE_TUNNEL_TOKEN_HERE",
-    "service_name": "cloudflared",
     "token_path": "/etc/cloudflared/token",
     "init_script_path": "/etc/init.d/cloudflared"
   },
@@ -32,7 +30,6 @@
   "deploy": {
     "dry_run": false,
     "update_package_lists": true,
-    "detect_only": false,
     "check_status_after": true
   }
 }
