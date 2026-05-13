@@ -22,14 +22,12 @@
     "install_package": true,
     "install_luci": true,
     "core": "xray",
-    "enable_service": false,
-    "vless_uri": "vless://PASTE_YOUR_VLESS_XRAY_LINK_HERE",
-    "prepare_vless_config": true,
-    "prepared_config_path": "/etc/v2raya/cfrremote_vless_uri.txt"
+    "enable_service": true
   },
   "deploy": {
     "dry_run": false,
     "update_package_lists": true,
-    "check_status_after": true
+    "check_status_after": true,
+    "public_ip_service_url": "https://api.ipify.org"
   }
 }

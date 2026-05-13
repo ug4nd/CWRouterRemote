@@ -11,15 +11,21 @@ from core.models import RouterConfig
 class InstallWorker(QObject):
     log = Signal(str)
     finished = Signal(bool, str)
+    result = Signal(str, str)
 
-    def __init__(self, config: RouterConfig):
+    def __init__(self, config: RouterConfig, action: str = "deploy"):
         super().__init__()
         self.config = config
+        self.action = action
 
     @Slot()
     def run(self) -> None:
         try:
-            RouterDeployer(self.config, logger=self.log.emit).run()
+            value = RouterDeployer(self.config, logger=self.log.emit).run(self.action)
+
+            if value is not None:
+                self.result.emit(self.action, value)
+
             self.finished.emit(True, "Готово")
         except Exception as exc:
             self.log.emit("ОШИБКА: " + str(exc))

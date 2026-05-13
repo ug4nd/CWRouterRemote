@@ -18,7 +18,8 @@ def load_router_config(path: str | Path) -> RouterConfig:
 
 
 def router_config_to_dict(config: RouterConfig) -> dict[str, Any]:
-    # В JSON специально нет имени файла / hostname-профиля.
+    # В JSON специально нет имени файла/профиля. Имя нужно только для названия файла.
+    # VLESS тоже не сохраняем: ключи настраиваются вручную через веб-интерфейс v2rayA.
     return {
         "ssh": {
             "host": config.ssh.host,
@@ -44,14 +45,12 @@ def router_config_to_dict(config: RouterConfig) -> dict[str, Any]:
             "install_luci": config.v2raya.install_luci,
             "core": config.v2raya.core,
             "enable_service": config.v2raya.enable_service,
-            "vless_uri": config.v2raya.vless_uri,
-            "prepare_vless_config": config.v2raya.prepare_vless_config,
-            "prepared_config_path": config.v2raya.prepared_config_path,
         },
         "deploy": {
             "dry_run": config.deploy.dry_run,
             "update_package_lists": config.deploy.update_package_lists,
             "check_status_after": config.deploy.check_status_after,
+            "public_ip_service_url": config.deploy.public_ip_service_url,
         },
     }
 

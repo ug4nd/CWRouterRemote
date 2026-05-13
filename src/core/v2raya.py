@@ -22,48 +22,24 @@ class V2RayAInstaller:
         if config.install_luci:
             self.pm.install(pm_name, ["luci-app-v2raya"], required=False)
 
-        if config.prepare_vless_config:
-            self.prepare_vless_config(config)
-
         if config.enable_service:
-            self.enable_runtime()
+            self.start_web_ui()
         else:
-            self.disable_runtime()
+            self.stop_service()
 
-    def prepare_vless_config(self, config: V2RayAConfig) -> None:
-        vless_uri = config.vless_uri.strip()
-        if not vless_uri:
-            raise ValueError("VLESS/Xray ссылка пустая.")
-
-        self.ssh.logger("Сохраняю VLESS/Xray ссылку. VPN не включаю ...")
-        self.ssh.run_checked("mkdir -p /etc/v2raya", timeout=30)
-        self.ssh.write_remote_file(config.prepared_config_path, vless_uri + "\n", mode="0600", timeout=30)
-
-        note = f"""CFRRemote
-
-VLESS/Xray link saved to:
-{config.prepared_config_path}
-
-VPN is intentionally disabled.
-Import/connect it manually in v2rayA later.
-"""
-        self.ssh.write_remote_file("/etc/v2raya/CFRRemote_README.txt", note, mode="0644", timeout=30)
-        self.ssh.logger("VLESS/Xray ссылка сохранена.")
-
-    def enable_runtime(self) -> None:
-        self.ssh.logger("Включаю v2rayA ...")
+    def start_web_ui(self) -> None:
+        # Запускаем v2rayA web UI, но не импортируем VLESS и не включаем VPN-режимы.
+        self.ssh.logger("Запускаю v2rayA web UI ...")
         self.ssh.run_command("uci set v2raya.config.enabled='1' 2>/dev/null || true", timeout=30)
         self.ssh.run_command("uci commit v2raya 2>/dev/null || true", timeout=30)
         self.ssh.run_command("/etc/init.d/v2raya enable || true", timeout=30)
         self.ssh.run_command("/etc/init.d/v2raya restart || /etc/init.d/v2raya start || true", timeout=90)
+        self.ssh.logger("v2rayA запущен. Настрой VLESS/VPN вручную через web UI.")
 
-    def disable_runtime(self) -> None:
-        self.ssh.logger("Оставляю v2rayA выключенным ...")
-        self.ssh.run_command("uci set v2raya.config.enabled='0' 2>/dev/null || true", timeout=30)
-        self.ssh.run_command("uci commit v2raya 2>/dev/null || true", timeout=30)
+    def stop_service(self) -> None:
+        self.ssh.logger("v2rayA не запускаю.")
         self.ssh.run_command("/etc/init.d/v2raya stop || true", timeout=60)
         self.ssh.run_command("/etc/init.d/v2raya disable || true", timeout=30)
-        self.ssh.logger("v2rayA подготовлен, VPN выключен.")
 
     def status(self, config: V2RayAConfig) -> None:
         if not config.enabled:
@@ -71,6 +47,6 @@ Import/connect it manually in v2rayA later.
 
         result = self.ssh.run_command("pgrep -a v2raya || true", timeout=30)
         if result.stdout.strip():
-            self.ssh.logger("v2rayA: процесс запущен")
+            self.ssh.logger("v2rayA: web UI должен быть доступен на 127.0.0.1:2017")
         else:
-            self.ssh.logger("v2rayA: процесс не запущен")
+            self.ssh.logger("v2rayA: процесс не найден")

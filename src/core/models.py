@@ -33,10 +33,7 @@ class V2RayAConfig:
     install_package: bool = True
     install_luci: bool = True
     core: str = "xray"
-    enable_service: bool = False
-    vless_uri: str = ""
-    prepare_vless_config: bool = True
-    prepared_config_path: str = "/etc/v2raya/cfrremote_vless_uri.txt"
+    enable_service: bool = True
 
 
 @dataclass
@@ -44,6 +41,7 @@ class DeployOptions:
     dry_run: bool = False
     update_package_lists: bool = True
     check_status_after: bool = True
+    public_ip_service_url: str = "https://api.ipify.org"
 
 
 @dataclass
@@ -98,17 +96,13 @@ class RouterConfig:
                 install_package=bool(v2raya_raw.get("install_package", True)),
                 install_luci=bool(v2raya_raw.get("install_luci", True)),
                 core=str(v2raya_raw.get("core", "xray")).lower(),
-                enable_service=bool(v2raya_raw.get("enable_service", False)),
-                vless_uri=str(v2raya_raw.get("vless_uri", "")),
-                prepare_vless_config=bool(v2raya_raw.get("prepare_vless_config", True)),
-                prepared_config_path=str(
-                    v2raya_raw.get("prepared_config_path", "/etc/v2raya/cfrremote_vless_uri.txt")
-                ),
+                enable_service=bool(v2raya_raw.get("enable_service", True)),
             ),
             deploy=DeployOptions(
                 dry_run=bool(deploy_raw.get("dry_run", False)),
                 update_package_lists=bool(deploy_raw.get("update_package_lists", True)),
                 check_status_after=bool(deploy_raw.get("check_status_after", True)),
+                public_ip_service_url=str(deploy_raw.get("public_ip_service_url", "https://api.ipify.org")),
             ),
         )
 
@@ -127,13 +121,11 @@ class RouterConfig:
             if not key_path.exists():
                 errors.append(f"SSH ключ не найден: {key_path}")
 
-        if self.cloudflared.configure_token_service and not self.cloudflared.tunnel_token.strip():
-            errors.append("Cloudflare tunnel token пустой.")
+        if self.cloudflared.enabled and self.cloudflared.configure_token_service:
+            if not self.cloudflared.tunnel_token.strip():
+                errors.append("Cloudflare tunnel token пустой.")
 
         if self.v2raya.core not in {"xray", "v2ray"}:
             errors.append("v2rayA core должен быть 'xray' или 'v2ray'.")
-
-        if self.v2raya.prepare_vless_config and not self.v2raya.vless_uri.strip():
-            errors.append("VLESS/Xray ссылка пустая.")
 
         return errors
