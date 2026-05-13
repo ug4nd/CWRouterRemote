@@ -36,7 +36,7 @@ class V2RayAConfig:
     enable_service: bool = False
     vless_uri: str = ""
     prepare_vless_config: bool = True
-    prepared_config_path: str = "/etc/v2raya/cwrouterremote_vless_uri.txt"
+    prepared_config_path: str = "/etc/v2raya/cfrremote_vless_uri.txt"
 
 
 @dataclass
@@ -102,7 +102,7 @@ class RouterConfig:
                 vless_uri=str(v2raya_raw.get("vless_uri", "")),
                 prepare_vless_config=bool(v2raya_raw.get("prepare_vless_config", True)),
                 prepared_config_path=str(
-                    v2raya_raw.get("prepared_config_path", "/etc/v2raya/cwrouterremote_vless_uri.txt")
+                    v2raya_raw.get("prepared_config_path", "/etc/v2raya/cfrremote_vless_uri.txt")
                 ),
             ),
             deploy=DeployOptions(

@@ -1,1 +1,1 @@
-"""Core backend modules for CWRouterRemote."""
+"""Core backend modules for CFRRemote."""

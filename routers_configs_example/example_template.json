@@ -25,7 +25,7 @@
     "enable_service": false,
     "vless_uri": "vless://PASTE_YOUR_VLESS_XRAY_LINK_HERE",
     "prepare_vless_config": true,
-    "prepared_config_path": "/etc/v2raya/cwrouterremote_vless_uri.txt"
+    "prepared_config_path": "/etc/v2raya/cfrremote_vless_uri.txt"
   },
   "deploy": {
     "dry_run": false,

@@ -12,8 +12,8 @@ from gui.main_window import MainWindow
 
 def main() -> int:
     app = QApplication(sys.argv)
-    app.setApplicationName("CWRouterRemote")
-    app.setOrganizationName("CWRouterRemote")
+    app.setApplicationName("CFRRemote")
+    app.setOrganizationName("CFRRemote")
 
     window = MainWindow()
     window.show()

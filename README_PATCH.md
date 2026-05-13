@@ -1,4 +1,4 @@
-# CWRouterRemote compact GUI
+# CFRRemote compact GUI
 
 ## Что изменено
 
@@ -10,7 +10,7 @@
 - Пути token/VLESS в GUI не показываются, они остаются в JSON:
   - `/etc/cloudflared/token`
   - `/etc/init.d/cloudflared`
-  - `/etc/v2raya/cwrouterremote_vless_uri.txt`
+  - `/etc/v2raya/cfrremote_vless_uri.txt`
 - v2rayA подготавливается, но VPN не включается:
   - `enable_service: false`
   - service stop/disable.
@@ -21,3 +21,11 @@
 pip install -r requirements.txt
 python src/main.py
 ```
+
+
+## v2 UI update
+
+- Зелёный цвет оставлен как акцент вокруг блоков и кнопок.
+- Внутри окон поля сделаны светлее.
+- Галочки сделаны крупнее и нагляднее.
+- Действия разделены на группы: Общее, Cloudflared, v2rayA.

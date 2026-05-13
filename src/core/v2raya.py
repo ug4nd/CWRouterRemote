@@ -39,7 +39,7 @@ class V2RayAInstaller:
         self.ssh.run_checked("mkdir -p /etc/v2raya", timeout=30)
         self.ssh.write_remote_file(config.prepared_config_path, vless_uri + "\n", mode="0600", timeout=30)
 
-        note = f"""CWRouterRemote
+        note = f"""CFRRemote
 
 VLESS/Xray link saved to:
 {config.prepared_config_path}
@@ -47,7 +47,7 @@ VLESS/Xray link saved to:
 VPN is intentionally disabled.
 Import/connect it manually in v2rayA later.
 """
-        self.ssh.write_remote_file("/etc/v2raya/CWRouterRemote_README.txt", note, mode="0644", timeout=30)
+        self.ssh.write_remote_file("/etc/v2raya/CFRRemote_README.txt", note, mode="0644", timeout=30)
         self.ssh.logger("VLESS/Xray ссылка сохранена.")
 
     def enable_runtime(self) -> None:

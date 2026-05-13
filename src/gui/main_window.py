@@ -38,77 +38,104 @@ from gui.install_worker import InstallWorker
 
 MONSTER_STYLE = """
 QMainWindow, QWidget {
-    background-color: #161a17;
-    color: #d7e8d2;
+    background-color: #171a17;
+    color: #e8eee6;
     font-size: 13px;
 }
+QFrame#TopBar {
+    background-color: #202620;
+    border: 2px solid #3DFF58;
+    border-radius: 12px;
+}
 QGroupBox {
-    border: 1px solid #2f5d34;
-    border-radius: 10px;
+    background-color: #2b302b;
+    color: #edf5ea;
+    border: 2px solid #2f6f38;
+    border-radius: 12px;
     margin-top: 12px;
-    padding: 10px;
-    background-color: #1f241f;
+    padding: 12px;
 }
 QGroupBox::title {
     subcontrol-origin: margin;
-    left: 12px;
-    padding: 0 6px;
+    left: 14px;
+    padding: 0 8px;
     color: #7CFF6B;
     font-weight: bold;
+    background-color: #2b302b;
 }
-QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox {
-    background-color: #0f120f;
-    color: #e8ffe3;
-    border: 1px solid #35483a;
-    border-radius: 7px;
-    padding: 6px;
-    selection-background-color: #3DFF58;
-    selection-color: #071007;
-}
-QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
-    border: 1px solid #3DFF58;
-}
-QPushButton {
-    background-color: #2a332b;
-    color: #e8ffe3;
-    border: 1px solid #3DFF58;
-    border-radius: 9px;
-    padding: 8px 12px;
-    font-weight: bold;
-}
-QPushButton:hover {
-    background-color: #324233;
-}
-QPushButton:pressed {
-    background-color: #3DFF58;
-    color: #071007;
-}
-QPushButton:disabled {
-    color: #667066;
-    border-color: #384038;
-}
-QCheckBox {
-    spacing: 8px;
-}
-QCheckBox::indicator {
-    width: 16px;
-    height: 16px;
-}
-QCheckBox::indicator:checked {
-    background-color: #3DFF58;
-    border: 1px solid #7CFF6B;
+QLabel {
+    color: #e8eee6;
 }
 QLabel#TitleLabel {
     color: #7CFF6B;
     font-size: 20px;
     font-weight: bold;
 }
-QFrame#TopBar {
-    background-color: #101410;
-    border: 1px solid #263428;
-    border-radius: 12px;
+QLabel#HintLabel {
+    color: #b5c6b2;
+}
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox {
+    background-color: #f2f4ef;
+    color: #111711;
+    border: 2px solid #90a090;
+    border-radius: 8px;
+    padding: 7px;
+    selection-background-color: #3DFF58;
+    selection-color: #071007;
+}
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+    border: 2px solid #3DFF58;
+}
+QPlainTextEdit {
+    background-color: #edf0eb;
+    color: #111711;
+}
+QPushButton {
+    background-color: #293329;
+    color: #f0fff0;
+    border: 2px solid #3DFF58;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #354235;
+}
+QPushButton:pressed {
+    background-color: #3DFF58;
+    color: #071007;
+}
+QPushButton:disabled {
+    color: #889088;
+    border-color: #4a554a;
+    background-color: #2a2e2a;
+}
+QCheckBox {
+    color: #edf5ea;
+    spacing: 10px;
+    padding: 5px;
+}
+QCheckBox::indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    border: 2px solid #aebaae;
+    background-color: #f2f4ef;
+}
+QCheckBox::indicator:hover {
+    border: 2px solid #7CFF6B;
+}
+QCheckBox::indicator:checked {
+    background-color: #3DFF58;
+    border: 2px solid #7CFF6B;
+    image: none;
+}
+QCheckBox::indicator:unchecked {
+    background-color: #f2f4ef;
+    border: 2px solid #aebaae;
 }
 """
+
 
 
 def make_config_filename(name: str) -> str:
@@ -122,7 +149,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("CWRouterRemote")
+        self.setWindowTitle("CFRRemote")
         self.resize(980, 720)
         self.setStyleSheet(MONSTER_STYLE)
 
@@ -146,12 +173,13 @@ class MainWindow(QMainWindow):
         top_layout = QGridLayout(top_bar)
         top_layout.setContentsMargins(12, 10, 12, 10)
 
-        title = QLabel("CWRouterRemote")
+        title = QLabel("CFRRemote")
         title.setObjectName("TitleLabel")
 
         self.file_name_input = QLineEdit("Router1")
         self.file_name_input.setPlaceholderText("Например: Router1")
         self.file_hint_label = QLabel("Файл: router1_config.json")
+        self.file_hint_label.setObjectName("HintLabel")
 
         self.btn_load_json = QPushButton("Загрузить JSON")
         self.btn_save_json = QPushButton("Сохранить JSON")
@@ -219,44 +247,48 @@ class MainWindow(QMainWindow):
         left.addWidget(self.connection_group)
         left.addWidget(self.secret_group)
 
-        self.actions_group = QGroupBox("Действия")
+        self.actions_group = QGroupBox("Что выполнить")
         actions_layout = QVBoxLayout(self.actions_group)
 
-        self.chk_update_lists = QCheckBox("Обновить список пакетов")
+        self.chk_update_lists = QCheckBox("Обновить список пакетов перед установкой")
         self.chk_update_lists.setChecked(True)
-
-        self.chk_cloudflared = QCheckBox("Установить cloudflared")
-        self.chk_cloudflared.setChecked(True)
-        self.chk_cloudflared_luci = QCheckBox("Установить LuCI cloudflared")
-        self.chk_cloudflared_luci.setChecked(True)
-        self.chk_cloudflared_service = QCheckBox("Настроить Cloudflare tunnel")
-        self.chk_cloudflared_service.setChecked(True)
-
-        self.chk_v2raya = QCheckBox("Установить v2rayA")
-        self.chk_v2raya.setChecked(True)
-        self.chk_v2raya_luci = QCheckBox("Установить LuCI v2rayA")
-        self.chk_v2raya_luci.setChecked(True)
-        self.chk_vless_prepare = QCheckBox("Сохранить VLESS, VPN не включать")
-        self.chk_vless_prepare.setChecked(True)
-
-        self.chk_status = QCheckBox("Проверить после выполнения")
+        self.chk_status = QCheckBox("Проверить сервисы после выполнения")
         self.chk_status.setChecked(True)
+        self.chk_dry_run = QCheckBox("Тестовый режим: ничего не менять на роутере")
 
-        self.chk_dry_run = QCheckBox("Dry-run: только показать действия")
+        common_group = QGroupBox("Общее")
+        common_layout = QVBoxLayout(common_group)
+        common_layout.addWidget(self.chk_update_lists)
+        common_layout.addWidget(self.chk_status)
+        common_layout.addWidget(self.chk_dry_run)
 
-        for checkbox in [
-            self.chk_update_lists,
-            self.chk_cloudflared,
-            self.chk_cloudflared_luci,
-            self.chk_cloudflared_service,
-            self.chk_v2raya,
-            self.chk_v2raya_luci,
-            self.chk_vless_prepare,
-            self.chk_status,
-            self.chk_dry_run,
-        ]:
-            actions_layout.addWidget(checkbox)
+        cloudflare_group = QGroupBox("Cloudflared")
+        cloudflare_layout = QVBoxLayout(cloudflare_group)
+        self.chk_cloudflared = QCheckBox("Установить пакет cloudflared")
+        self.chk_cloudflared.setChecked(True)
+        self.chk_cloudflared_luci = QCheckBox("Установить LuCI-интерфейс для cloudflared")
+        self.chk_cloudflared_luci.setChecked(True)
+        self.chk_cloudflared_service = QCheckBox("Настроить token и запустить tunnel")
+        self.chk_cloudflared_service.setChecked(True)
+        cloudflare_layout.addWidget(self.chk_cloudflared)
+        cloudflare_layout.addWidget(self.chk_cloudflared_luci)
+        cloudflare_layout.addWidget(self.chk_cloudflared_service)
 
+        v2raya_group = QGroupBox("v2rayA")
+        v2raya_layout = QVBoxLayout(v2raya_group)
+        self.chk_v2raya = QCheckBox("Установить пакет v2rayA")
+        self.chk_v2raya.setChecked(True)
+        self.chk_v2raya_luci = QCheckBox("Установить LuCI-интерфейс для v2rayA")
+        self.chk_v2raya_luci.setChecked(True)
+        self.chk_vless_prepare = QCheckBox("Сохранить VLESS/Xray, но VPN НЕ включать")
+        self.chk_vless_prepare.setChecked(True)
+        v2raya_layout.addWidget(self.chk_v2raya)
+        v2raya_layout.addWidget(self.chk_v2raya_luci)
+        v2raya_layout.addWidget(self.chk_vless_prepare)
+
+        actions_layout.addWidget(common_group)
+        actions_layout.addWidget(cloudflare_group)
+        actions_layout.addWidget(v2raya_group)
         actions_layout.addStretch()
         right.addWidget(self.actions_group)
 

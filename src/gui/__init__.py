@@ -1,1 +1,1 @@
-"""GUI modules for CWRouterRemote."""
+"""GUI modules for CFRRemote."""
