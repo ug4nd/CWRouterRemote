@@ -1,12 +1,24 @@
 import sys
+from pathlib import Path
+
 from PySide6.QtWidgets import QApplication
+
+# Allow running as: python src/main.py
+PROJECT_SRC = Path(__file__).resolve().parent
+if str(PROJECT_SRC) not in sys.path:
+    sys.path.insert(0, str(PROJECT_SRC))
+
 from gui.main_window import MainWindow
 
 
 def main() -> int:
     app = QApplication(sys.argv)
+    app.setApplicationName("CWRouterRemote")
+    app.setOrganizationName("CWRouterRemote")
+
     window = MainWindow()
     window.show()
+
     return app.exec()
 
 

@@ -1,28 +1,30 @@
+from __future__ import annotations
+
+import traceback
+
 from PySide6.QtCore import QObject, Signal, Slot
 
-from core.installer import CloudflaredInstaller, InstallError
+from core.deployer import RouterDeployer
+from core.models import RouterConfig
 
 
 class InstallWorker(QObject):
-    finished = Signal()
     log = Signal(str)
-    error = Signal(str)
-    success = Signal()
+    finished = Signal(bool, str)
 
-    def __init__(self, installer: CloudflaredInstaller) -> None:
+    def __init__(self, config: RouterConfig, action: str = "deploy_selected"):
         super().__init__()
-        self.installer = installer
+        self.config = config
+        self.action = action
 
     @Slot()
     def run(self) -> None:
         try:
-            logs = self.installer.install_from_repo()
-            for line in logs:
-                self.log.emit(line)
-            self.success.emit()
-        except InstallError as e:
-            self.error.emit(str(e))
-        except Exception as e:
-            self.error.emit(str(e))
-        finally:
-            self.finished.emit()
+            deployer = RouterDeployer(self.config, logger=self.log.emit)
+            deployer.run(self.action)
+            self.finished.emit(True, "Готово")
+        except Exception as exc:
+            self.log.emit("ОШИБКА:")
+            self.log.emit(str(exc))
+            self.log.emit(traceback.format_exc())
+            self.finished.emit(False, str(exc))

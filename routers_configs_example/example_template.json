@@ -1,7 +1,38 @@
 {
-  "name": "router-name",
-  "host": "192.168.1.1",
-  "username": "root",
-  "password": "",
-  "tunnel_token": "PASTE_TOKEN_HERE"
+  "name": "",
+  "ssh": {
+    "host": "192.168.1.1",
+    "port": 22,
+    "username": "root",
+    "password": "",
+    "ssh_key_path": "",
+    "connect_timeout": 15,
+    "command_timeout": 300
+  },
+  "cloudflared": {
+    "enabled": true,
+    "install_package": true,
+    "install_luci": true,
+    "configure_token_service": true,
+    "tunnel_token": "PASTE_CLOUDFLARE_TUNNEL_TOKEN_HERE",
+    "service_name": "cloudflared",
+    "token_path": "/etc/cloudflared/token",
+    "init_script_path": "/etc/init.d/cloudflared"
+  },
+  "v2raya": {
+    "enabled": true,
+    "install_package": true,
+    "install_luci": true,
+    "core": "xray",
+    "enable_service": false,
+    "vless_uri": "vless://PASTE_YOUR_VLESS_XRAY_LINK_HERE",
+    "prepare_vless_config": true,
+    "prepared_config_path": "/etc/v2raya/cwrouterremote_vless_uri.txt"
+  },
+  "deploy": {
+    "dry_run": false,
+    "update_package_lists": true,
+    "detect_only": false,
+    "check_status_after": true
+  }
 }
