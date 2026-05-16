@@ -4,7 +4,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QThread
+from PySide6.QtCore import QThread, Qt
+from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -19,7 +20,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QPlainTextEdit,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -46,6 +46,10 @@ QFrame#TopBar {
     border: 1px solid #3DFF58;
     border-radius: 10px;
 }
+QLabel {
+    color: #d7d7d7;
+    background-color: transparent;
+}
 QLabel#TitleLabel {
     color: #7CFF6B;
     font-size: 21px;
@@ -66,11 +70,11 @@ QGroupBox::title {
     subcontrol-origin: margin;
     left: 12px;
     padding: 0 6px;
-    color: #eeeeee;
+    color: #d7d7d7;
     font-weight: bold;
     background-color: #303030;
 }
-QLineEdit, QPlainTextEdit, QSpinBox {
+QLineEdit, QPlainTextEdit {
     background-color: #303030;
     color: #eeeeee;
     border: 1px solid #6a6a6a;
@@ -79,7 +83,7 @@ QLineEdit, QPlainTextEdit, QSpinBox {
     selection-background-color: #3DFF58;
     selection-color: #101410;
 }
-QLineEdit:focus, QPlainTextEdit:focus, QSpinBox:focus {
+QLineEdit:focus, QPlainTextEdit:focus {
     border: 1px solid #3DFF58;
 }
 QPushButton {
@@ -150,11 +154,15 @@ class MainWindow(QMainWindow):
 
         title = QLabel("CFRRemote")
         title.setObjectName("TitleLabel")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.file_name_input = QLineEdit("Router1")
         self.file_name_input.setPlaceholderText("Например: Router1")
+        self.file_name_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.file_hint_label = QLabel("Файл: router1_config.json")
         self.file_hint_label.setObjectName("HintLabel")
+        self.file_hint_label.setMinimumWidth(260)
+        self.file_hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.btn_load_json = QPushButton("Загрузить JSON")
         self.btn_save_json = QPushButton("Сохранить JSON")
@@ -162,14 +170,18 @@ class MainWindow(QMainWindow):
         self.btn_clear_logs = QPushButton("Очистить лог")
 
         top_layout.addWidget(title, 0, 0)
-        top_layout.addWidget(QLabel("Имя файла"), 0, 1)
+        file_name_label = QLabel("Имя файла")
+        file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        top_layout.addWidget(file_name_label, 0, 1)
         top_layout.addWidget(self.file_name_input, 0, 2)
         top_layout.addWidget(self.file_hint_label, 0, 3)
         top_layout.addWidget(self.btn_load_json, 1, 0)
         top_layout.addWidget(self.btn_save_json, 1, 1)
         top_layout.addWidget(self.btn_deploy, 1, 2)
         top_layout.addWidget(self.btn_clear_logs, 1, 3)
-        top_layout.setColumnStretch(2, 1)
+        top_layout.setColumnStretch(0, 1)
+        top_layout.setColumnStretch(2, 2)
+        top_layout.setColumnStretch(3, 2)
 
         layout.addWidget(top_bar)
 
@@ -180,9 +192,8 @@ class MainWindow(QMainWindow):
         connection_form = QFormLayout(self.connection_group)
 
         self.host_input = QLineEdit("192.168.1.1")
-        self.port_input = QSpinBox()
-        self.port_input.setRange(1, 65535)
-        self.port_input.setValue(22)
+        self.port_input = QLineEdit("22")
+        self.port_input.setValidator(QIntValidator(1, 65535, self))
         self.username_input = QLineEdit("root")
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -191,8 +202,10 @@ class MainWindow(QMainWindow):
         self.btn_choose_key = QPushButton("...")
 
         key_row = QWidget()
+        key_row.setStyleSheet("background-color: transparent;")
         key_layout = QHBoxLayout(key_row)
         key_layout.setContentsMargins(0, 0, 0, 0)
+        key_layout.setSpacing(6)
         key_layout.addWidget(self.key_path_input)
         key_layout.addWidget(self.btn_choose_key)
 
@@ -336,7 +349,7 @@ class MainWindow(QMainWindow):
         return RouterConfig(
             ssh=SSHConfig(
                 host=self.host_input.text().strip(),
-                port=self.port_input.value(),
+                port=int(self.port_input.text().strip() or "22"),
                 username=self.username_input.text().strip(),
                 password=self.password_input.text(),
                 ssh_key_path=self.key_path_input.text().strip(),
@@ -365,7 +378,7 @@ class MainWindow(QMainWindow):
 
     def apply_config(self, config: RouterConfig) -> None:
         self.host_input.setText(config.ssh.host)
-        self.port_input.setValue(config.ssh.port)
+        self.port_input.setText(str(config.ssh.port))
         self.username_input.setText(config.ssh.username)
         self.password_input.setText(config.ssh.password)
         self.key_path_input.setText(config.ssh.ssh_key_path)
