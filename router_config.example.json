@@ -1,0 +1,38 @@
+{
+  "router": {
+    "host": "192.168.7.1",
+    "port": 22,
+    "username": "root",
+    "password": "password_here",
+    "lan_ip": "192.168.7.1"
+  },
+  "backup": true,
+  "tailscale": {
+    "enabled": true,
+    "auth_key": "tskey-auth-...",
+    "install_connect": true,
+    "configure_zone": true,
+    "configure_cron": true,
+    "wake_peer_ip": "100.77.73.23",
+    "wake_delay": 90
+  },
+  "xray": {
+    "enabled": true,
+    "remove_v2raya": true,
+    "install_xray_core": true,
+    "update_vless": true,
+    "vless_link": "vless://UUID@SERVER:PORT?type=tcp&encryption=none&security=reality&pbk=PUBLIC_KEY&fp=chrome&sni=DOMAIN&sid=SHORT_ID&spx=%2F&flow=xtls-rprx-vision#name",
+    "xray_port": 12345,
+    "configure_redirect": true,
+    "block_udp": true,
+    "vless_server_ip": "SERVER_IP"
+  },
+  "dns": {
+    "enabled": true,
+    "configure": true,
+    "dns1": "8.8.8.8",
+    "dns2": "8.8.4.4",
+    "dns3": "9.9.9.9",
+    "force_lan_dns": true
+  }
+}
